@@ -1,8 +1,9 @@
 import socket
 import pickle
 
+
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-server_socket.bind(('localhost', 9999))
+server_socket.bind(('0.0.0.0', 9999))
 print("UDP server is running on port 9999...")
 
 clients = []
