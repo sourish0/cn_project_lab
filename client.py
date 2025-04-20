@@ -21,6 +21,9 @@ player1_walk = [
 ]
 player1_attack = pygame.image.load('Player/player_stand.png').convert_alpha()
 player1_jump = pygame.image.load('Player/jump.png').convert_alpha()
+# Use attack sprite as guard pose
+player1_guard = player1_attack
+
 
 player1_index = 0
 player1_surface = player1_walk[player1_index]
@@ -32,6 +35,9 @@ player2_walk = [
 ]
 player2_attack = pygame.transform.flip(player1_attack, True, False)
 player2_jump = pygame.transform.flip(player1_jump, True, False)
+
+player2_guard = player2_attack
+
 player2_index = 0
 player2_surface = player2_walk[player2_index]
 player2_rect = player2_surface.get_rect(midbottom=(700, 300))
@@ -40,6 +46,7 @@ gravity = 1
 jump_velocity = 0
 is_jumping = False
 is_attacking = False
+is_guarding = False
 attack_timer = 0
 ground_level = 300
 
@@ -70,6 +77,7 @@ while True:
 
     keys = pygame.key.get_pressed()
     moving = False
+    is_guarding = False
 
     if not game_over:
         if keys[pygame.K_LEFT]:
@@ -83,6 +91,9 @@ while True:
             player1_rect.left = 0
         if player1_rect.right > 800:
             player1_rect.right = 800
+
+        if keys[pygame.K_DOWN]:
+            is_guarding = True
 
         if keys[pygame.K_UP] and not is_jumping:
             is_jumping = True
@@ -101,7 +112,9 @@ while True:
             is_attacking = True
             attack_timer = 10
 
-        if is_attacking:
+        if is_guarding:
+            player1_surface = player1_guard
+        elif is_attacking:
             player1_surface = player1_attack
             attack_timer -= 1
             if attack_timer <= 0:
@@ -119,6 +132,7 @@ while True:
             "y": player1_rect.y,
             "is_jumping": is_jumping,
             "is_attacking": is_attacking,
+            "is_guarding": is_guarding,
             "moving": moving,
             "frame": player1_index
         }
@@ -127,7 +141,6 @@ while True:
             client_socket.sendto(pickle.dumps(player1_state), server_address)
         except Exception as e:
             print("Error sending data:", e)
-
         try:
             data, _ = client_socket.recvfrom(1024)
             response = pickle.loads(data)
@@ -139,7 +152,9 @@ while True:
             game_over = response['game_over']
             winner = response['winner']
 
-            if response["is_jumping"]:
+            if response["is_guarding"]:
+                player2_surface = player2_guard
+            elif response["is_jumping"]:
                 player2_surface = player2_jump
             elif response["is_attacking"]:
                 player2_surface = player2_attack
@@ -164,12 +179,7 @@ while True:
     pygame.draw.rect(screen, "green", (550, 30, 2 * opponent_health, 20))
 
     if game_over:
-        if winner == 0:
-            msg = "Draw!"
-        elif winner - 1 == player_idx:
-            msg = "You Win!"
-        else:
-            msg = "You Lose!"
+        msg = "Draw!" if winner == 0 else "You Win!" if winner - 1 == player_idx else "You Lose!"
         text = font.render(msg, True, (255, 255, 255))
         screen.blit(text, (300, 180))
 

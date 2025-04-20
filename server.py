@@ -1,7 +1,6 @@
 import socket
 import pickle
 
-
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server_socket.bind(('0.0.0.0', 9999))
 print("UDP server is running on port 9999...")
@@ -42,7 +41,10 @@ while True:
             if state['is_attacking'] and other_state:
                 dist = abs((state['x'] + SPRITE_WIDTH // 2) - (other_state['x'] + SPRITE_WIDTH // 2))
                 if dist <= 10:
-                    health[other_idx] -= 5
+                    if other_state.get('is_guarding', False):
+                        health[other_idx] -= 2  # Blocked hit
+                    else:
+                        health[other_idx] -= 5  # Normal hit
                     health[other_idx] = max(0, health[other_idx])
 
             response = {
@@ -50,6 +52,7 @@ while True:
                 "y": other_state['y'],
                 "is_jumping": other_state['is_jumping'],
                 "is_attacking": other_state['is_attacking'],
+                "is_guarding": other_state.get('is_guarding', False),
                 "moving": other_state['moving'],
                 "frame": other_state['frame'],
                 "health": health[other_idx],
