@@ -4,7 +4,7 @@ import pickle
 from sys import exit
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-server_address = ('localhost', 9999)
+server_address = ('192.168.29.227', 9999)  # 👈 Replace with your server's Wi-Fi IP
 client_socket.setblocking(False)
 
 pygame.init()
@@ -114,7 +114,6 @@ while True:
         elif not is_jumping:
             player1_surface = player1_walk[0]
 
-
         player1_state = {
             "x": player1_rect.x,
             "y": player1_rect.y,
@@ -128,6 +127,7 @@ while True:
             client_socket.sendto(pickle.dumps(player1_state), server_address)
         except Exception as e:
             print("Error sending data:", e)
+
         try:
             data, _ = client_socket.recvfrom(1024)
             response = pickle.loads(data)
